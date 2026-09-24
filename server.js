@@ -1,6 +1,7 @@
 import http from 'node:http';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { loadEnv } from './server/env.js';
 
@@ -47,8 +48,24 @@ async function serveStatic(req, res, pathname) {
   }
 }
 
+// Optional password gate for public hosting (set APP_PASSWORD in .env). Any username works.
+const PASSWORD = process.env.APP_PASSWORD || '';
+function authorized(req) {
+  if (!PASSWORD) return true;
+  const [type, b64] = (req.headers.authorization || '').split(' ');
+  if (type !== 'Basic' || !b64) return false;
+  const given = Buffer.from(Buffer.from(b64, 'base64').toString('utf8').replace(/^[^:]*:/, ''));
+  const want = Buffer.from(PASSWORD);
+  return given.length === want.length && crypto.timingSafeEqual(given, want);
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
+  if (!authorized(req)) {
+    res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Majlis", charset="UTF-8"', 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('كلمة المرور مطلوبة');
+    return;
+  }
   try {
     if (url.pathname.startsWith('/api/')) await handleApi(req, res, url);
     else await serveStatic(req, res, url.pathname);
@@ -68,4 +85,5 @@ server.listen(PORT, HOST, async () => {
   console.log(cfg.mock
     ? '  ⚠ وضع تجريبي: لا يوجد مفتاح DeepSeek (أضفه من الإعدادات أو ملف .env)\n'
     : `  ✓ DeepSeek متصل (${cfg.model})\n`);
+  if (!PASSWORD && HOST !== '127.0.0.1' && HOST !== 'localhost') console.log('  ⚠ السيرفر مفتوح على الشبكة بدون كلمة مرور — أضف APP_PASSWORD في .env\n');
 });
