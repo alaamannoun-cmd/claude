@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>مجلس — فريق مدرّبيك الشخصي</title>
+  <meta name="description" content="منصة مدرّبين شخصيين بالذكاء الاصطناعي: صمّم شخصية مدربك وشكله، ولكل مدرب ذاكرة خاصة، ومدير ذكي يوزّع العمل بينهم.">
+  <meta name="theme-color" content="#F5F6FB">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <script>
+    try { const t = localStorage.getItem('majlis.theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+  </script>
+</head>
+<body>
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="app" id="app" hidden>
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#/home">
+        <img src="/favicon.svg" alt="" width="36" height="36">
+        <span><b>مجلس</b><small>فريق مدرّبيك الشخصي</small></span>
+      </a>
+      <nav class="nav" id="nav"></nav>
+      <div class="side-section">
+        <div class="side-title"><span>فريقك</span><a href="#/forge" class="icon-btn sm" title="مدرّب جديد" id="sideAdd"></a></div>
+        <div class="side-team" id="sideTeam"></div>
+      </div>
+      <div class="me-card" id="meCard"></div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+
+    <main class="main" id="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" id="menuBtn" aria-label="القائمة"></button>
+        <div class="crumb" id="crumb"></div>
+        <div class="top-actions">
+          <div class="mode-pill" id="modePill" hidden></div>
+          <div class="pill streak" id="streakPill" title="أيام متتالية"></div>
+          <div class="pill xp" id="xpPill" title="نقاط الخبرة"></div>
+          <div class="bell-wrap">
+            <button class="icon-btn" id="bellBtn" aria-label="التذكيرات"></button>
+            <div class="bell-pop" id="bellPop" hidden></div>
+          </div>
+          <button class="icon-btn" id="themeBtn" aria-label="تبديل المظهر"></button>
+        </div>
+      </header>
+      <section id="view" class="view"></section>
+    </main>
+
+    <nav class="bottom-nav" id="bottomNav"></nav>
+  </div>
+
+  <div id="onboarding"></div>
+  <div id="splash" class="splash"><img src="/favicon.svg" alt="" width="64" height="64"><div class="typing"><i></i><i></i><i></i></div></div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <div id="modal-root"></div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

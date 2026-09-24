@@ -1,0 +1,15 @@
+{
+  "name": "majlis-ai-mentors",
+  "version": "0.1.0",
+  "private": true,
+  "description": "مجلس — منصة المدربين الشخصيين بالذكاء الاصطناعي: فريق مدربين بشخصيات وذاكرة خاصة، يديرهم مدير ذكي.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "demo": "MOCK=1 node server.js"
+  },
+  "engines": {
+    "node": ">=18.17"
+  }
+}
