@@ -1,0 +1,25 @@
+{
+  "name": "sakura-michi",
+  "version": "1.0.0",
+  "description": "3D bicycle ride through a Japanese spring valley (three.js)",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alaamannoun-cmd/claude.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alaamannoun-cmd/claude/issues"
+  },
+  "homepage": "https://github.com/alaamannoun-cmd/claude#readme",
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.63.0",
+    "three": "^0.186.0"
+  },
+  "type": "module"
+}

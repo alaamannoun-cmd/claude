@@ -1,0 +1,108 @@
+<div id="app" aria-label="مشهد اللعبة ثلاثي الأبعاد"></div>
+
+<section id="title" dir="rtl">
+  <div class="title-shade"></div>
+  <div class="title-col">
+    <div class="title-mark" aria-hidden="true"><span>桜</span><span>道</span></div>
+    <div class="title-text">
+      <p class="eyebrow">سَاكُورَا مِيتشي · Sakura Michi</p>
+      <h1>طريق الساكورا</h1>
+      <p class="lede">رحلة بالدرّاجة عبر وادٍ ياباني في موسم تفتّح الكرز: نهر وبحيرة وجبل فوجي، بوابات توري حمراء، غابة خيزران، وقرية بين حقول الأرز.</p>
+      <div id="load" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="load-track"><i id="load-fill"></i></div>
+        <span id="load-text">جارٍ التحضير…</span>
+      </div>
+      <div class="title-actions">
+        <button id="start" class="btn-primary" disabled>ابدأ الرحلة</button>
+        <label class="select">
+          <span>الجودة</span>
+          <select id="quality-select">
+            <option value="high">عالية</option>
+            <option value="medium">متوسطة</option>
+            <option value="low">منخفضة</option>
+          </select>
+        </label>
+      </div>
+      <ul class="legend" aria-label="التحكّم">
+        <li><span class="keys"><kbd>W</kbd><kbd>↑</kbd></span>تبديل (دوس)</li>
+        <li><span class="keys"><kbd>S</kbd><kbd>Space</kbd></span>فرامل</li>
+        <li><span class="keys"><kbd>A</kbd><kbd>D</kbd></span>توجيه</li>
+        <li><span class="keys"><kbd>Shift</kbd></span>وقوف وسرعة</li>
+        <li><span class="keys"><kbd>B</kbd></span>الجرس</li>
+        <li><span class="keys"><kbd>G</kbd></span>تلويح باليد</li>
+        <li><span class="keys"><kbd>C</kbd></span>الكاميرا</li>
+        <li><span class="keys"><kbd>T</kbd></span>وقت اليوم</li>
+        <li><span class="keys"><kbd>F</kbd></span>قيادة تلقائية</li>
+        <li><span class="keys"><kbd>P</kbd></span>وضع التصوير</li>
+      </ul>
+      <p class="hint-mouse">اسحب بالفأرة لتدوير الكاميرا، واستخدم العجلة للتقريب.</p>
+    </div>
+  </div>
+</section>
+
+<section id="hud" dir="rtl" hidden>
+  <div id="place" class="place" aria-live="polite">
+    <span class="place-jp"></span>
+    <span class="place-ar"></span>
+  </div>
+
+  <div id="minimap-wrap" aria-hidden="true">
+    <canvas id="minimap" width="300" height="300"></canvas>
+    <span class="mm-north">北</span>
+  </div>
+
+  <div id="speedo">
+    <div class="gauge-wrap">
+      <svg viewBox="0 0 140 140" class="gauge" aria-hidden="true">
+        <circle class="g-track" cx="70" cy="70" r="58"></circle>
+        <circle id="g-fill" class="g-fill" cx="70" cy="70" r="58"></circle>
+      </svg>
+      <div class="speed-read">
+        <b id="speed">0</b>
+        <small>كم/س</small>
+      </div>
+    </div>
+    <dl class="speed-meta">
+      <div><dt>المسافة</dt><dd id="dist">0.00 كم</dd></div>
+      <div><dt>الوقت</dt><dd id="tod">الغروب</dd></div>
+    </dl>
+  </div>
+
+  <div id="toast" role="status"></div>
+
+  <div id="chips">
+    <button class="chip" data-action="camera" title="C"><span id="chip-cam">خلف الدرّاجة</span></button>
+    <button class="chip" data-action="time" title="T"><span id="chip-time">الغروب الذهبي</span></button>
+    <button class="chip" data-action="autopilot" title="F"><span id="chip-auto">قيادة يدوية</span></button>
+    <button class="chip" data-action="mute" title="M"><span id="chip-sound">الصوت: يعمل</span></button>
+    <button class="chip" data-action="pause" title="Esc">القائمة</button>
+  </div>
+
+  <div id="touch" aria-hidden="true">
+    <div id="steer-pad"><div id="steer-knob"></div><span class="pad-l">◀</span><span class="pad-r">▶</span></div>
+    <div class="touch-right">
+      <button id="btn-brake" class="tbtn">فرامل</button>
+      <button id="btn-pedal" class="tbtn tbtn-main">دوس</button>
+      <div class="touch-small">
+        <button class="tbtn tbtn-s" data-action="bell">جرس</button>
+        <button class="tbtn tbtn-s" data-action="wave">لوّح</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pause" dir="rtl" hidden>
+  <div class="pause-card">
+    <h2>استراحة قصيرة</h2>
+    <p>الوادي بانتظارك. اختر ما يناسبك ثم أكمل الرحلة.</p>
+    <div class="pause-grid">
+      <button class="btn-ghost" data-action="time">تغيير وقت اليوم</button>
+      <button class="btn-ghost" data-action="camera">تغيير الكاميرا</button>
+      <button class="btn-ghost" data-action="autopilot">القيادة التلقائية</button>
+      <button class="btn-ghost" data-action="quality">الجودة: <span id="pause-q">عالية</span></button>
+      <button class="btn-ghost" data-action="music">الموسيقى: <span id="pause-music">تعمل</span></button>
+      <button class="btn-ghost" data-action="photo">وضع التصوير</button>
+    </div>
+    <button id="resume" class="btn-primary">متابعة الرحلة</button>
+  </div>
+</section>
