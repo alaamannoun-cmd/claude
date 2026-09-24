@@ -1,0 +1,20 @@
+{
+  "name": "majlis-avatar-pipeline",
+  "private": true,
+  "type": "module",
+  "description": "Converts Microsoft Rocketbox FBX avatars (with ARKit blendshapes) into optimized GLB for the Majlis 3D mentors.",
+  "scripts": {
+    "fetch": "node fetch.mjs",
+    "convert": "node convert.mjs",
+    "optimize": "node optimize.mjs"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "^4",
+    "@gltf-transform/extensions": "^4",
+    "@gltf-transform/functions": "^4",
+    "meshoptimizer": "^0.22",
+    "playwright-core": "^1.56",
+    "sharp": "^0.33",
+    "three": "0.170.0"
+  }
+}

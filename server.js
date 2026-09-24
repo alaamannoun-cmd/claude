@@ -23,6 +23,9 @@ const MIME = {
   '.ico': 'image/x-icon',
   '.json': 'application/json; charset=utf-8',
   '.webmanifest': 'application/manifest+json',
+  '.glb': 'model/gltf-binary',
+  '.webp': 'image/webp',
+  '.md': 'text/markdown; charset=utf-8',
 };
 
 async function serveStatic(req, res, pathname) {
@@ -32,7 +35,9 @@ async function serveStatic(req, res, pathname) {
   if (!file.startsWith(PUBLIC)) { res.writeHead(403).end(); return; }
   try {
     const data = await fs.readFile(file);
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+    // 3D models, portraits and vendored libraries are immutable: let the browser cache them
+    const cache = /^\/(avatars|vendor)\//.test(rel) ? 'public, max-age=604800' : 'no-cache';
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': cache });
     res.end(data);
   } catch {
     if (path.extname(rel)) { res.writeHead(404).end('Not found'); return; }

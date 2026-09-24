@@ -1,9 +1,11 @@
 // Mentor Forge: design identity, personality, teaching style, look — with a live preview.
 import { state, mentorById, applyProfile, upsert, removeFrom } from '../store.js';
 import { api } from '../api.js';
-import { avatarSVG, randomAvatar, normalizeAvatar, setMood } from '../avatar.js';
+import { randomAvatar, normalizeAvatar, modelInfo } from '../avatar.js';
+import { thumbUrl, preload } from '../avatar3d.js';
+import { stageBox, mountStages, setMood, feedSpeech, retarget } from '../components.js';
 import { TEMPLATES, DIRECTOR } from '../templates.js';
-import { TRAITS, DIALECTS, STYLES, AVATAR, AURAS, AVATAR_LABELS, samplePhrase } from '../catalog.js';
+import { TRAITS, DIALECTS, STYLES, AURAS, AVATAR_LABELS, MODELS, MODEL_TAGS, GLASSES, LIGHTS, EXPRESSIONS, samplePhrase } from '../catalog.js';
 import { esc, icon, toast, confetti, sound, confirmBox } from '../ui.js';
 
 const TABS = [['identity', 'الهوية والتخصص', 'target'], ['persona', 'الشخصية والأسلوب', 'heart'], ['look', 'المظهر', 'sparkles'], ['rules', 'الوصايا', 'notebook']];
@@ -19,7 +21,7 @@ export async function render(root, [id], query) {
   let m = editing ? structuredClone(editing) : blank();
   m.avatar = normalizeAvatar(m.avatar);
   let tab = 'identity';
-  let lookTab = 'face';
+  let gFilter = 'all', tagFilter = 'all';
   let mood = 'idle';
 
   root.innerHTML = `
@@ -27,7 +29,7 @@ export async function render(root, [id], query) {
     <div class="page-head">
       <div><h1>${icon('sparkles', 26)} ${editing ? `تعديل ${esc(editing.name)}` : 'صانع المدرّبين'}</h1><p class="muted">${editing ? 'عدّل أي تفصيلة — التغييرات بتنعكس من الرد الجاي.' : 'صمّم مدرّباً على مقاسك: تخصص دقيق، شخصية، أسلوب تدريس، وشكل يعبّر عنه.'}</p></div>
     </div>
-    ${editing ? '' : `<div class="tpl-strip" id="tpls"><span class="muted small">ابدأ من قالب:</span>${TEMPLATES.map(t => `<button class="tpl" data-tpl="${t.key}">${avatarSVG(t.avatar, { cls: 'still' })}<span><b>${t.emoji} ${esc(t.name)}</b><small>${esc(t.title)}</small></span></button>`).join('')}</div>`}
+    ${editing ? '' : `<div class="tpl-strip" id="tpls"><span class="muted small">ابدأ من قالب:</span>${TEMPLATES.map(t => `<button class="tpl" data-tpl="${t.key}"><span class="tpl-av" style="--a1:${AURAS[t.avatar.aura][0]};--a2:${AURAS[t.avatar.aura][1]}"><img src="${thumbUrl(t.avatar.model)}" alt="" loading="lazy"></span><span><b>${t.emoji} ${esc(t.name)}</b><small>${esc(t.title)}</small></span></button>`).join('')}</div>`}
     <div class="forge-layout">
       <aside class="forge-preview card" id="preview"></aside>
       <section class="forge-editor card">
@@ -48,7 +50,7 @@ export async function render(root, [id], query) {
   function paintPreview() {
     $('#preview').innerHTML = `
       <div class="pv-stage" style="--a1:${AURAS[m.avatar.aura][0]};--a2:${AURAS[m.avatar.aura][1]}">
-        <div class="pv-av" id="pvAv">${avatarSVG(m.avatar, { mood })}</div>
+        <div class="pv-av" id="pvAv">${stageBox(m, { framing: 'bust', mood })}</div>
         <div class="moods">${[['idle', '🙂 عادي'], ['talking', '🗣️ يتكلم'], ['thinking', '🤔 يفكّر'], ['happy', '🎉 سعيد']].map(([k, l]) => `<button data-mood="${k}" class="${k === mood ? 'on' : ''}">${l}</button>`).join('')}</div>
         <button class="icon-btn dice" id="dice" title="شكل عشوائي">${icon('shuffle', 18)}</button>
       </div>
@@ -64,10 +66,10 @@ export async function render(root, [id], query) {
     $('#pvTraits').innerHTML = TRAITS.map(t => `<div class="trait"><span>${t.icon} ${t.label}</span><i><b style="width:${m.personality[t.id]}%"></b></i></div>`).join('');
   };
   const refreshAvatar = (flash = true) => {
-    $('#pvAv').innerHTML = avatarSVG(m.avatar, { mood: flash ? 'happy' : mood });
+    retarget($('#pvAv'), m);
     $('#preview .pv-stage').style.setProperty('--a1', AURAS[m.avatar.aura][0]);
     $('#preview .pv-stage').style.setProperty('--a2', AURAS[m.avatar.aura][1]);
-    if (flash) setTimeout(() => setMood($('#pvAv'), mood), 700);
+    if (flash) { setMood($('#pvAv'), 'happy'); setTimeout(() => setMood($('#pvAv'), mood), 1200); }
   };
 
   // ---------- editor tabs ----------
@@ -95,28 +97,25 @@ export async function render(root, [id], query) {
         <div class="field"><span>لغة ولهجة الحديث</span><div class="chips wrap" id="dialects">${DIALECTS.map(d => `<button type="button" class="chip ${m.dialect === d.id ? 'on' : ''}" data-dialect="${d.id}">${d.label}</button>`).join('')}</div></div>`;
     } else if (tab === 'look') {
       const a = m.avatar;
-      const LOOK_TABS = [['face', 'الوجه'], ['hair', 'الشعر والرأس'], ['style', 'الملابس والإكسسوار'], ['aura', 'الهالة']];
-      const opts = (key, list, labels) => `<div class="opt-grid">${list.map(v => `<button type="button" class="opt ${a[key] === v ? 'on' : ''}" data-av="${key}" data-v="${v}">${labels?.[v] || v}</button>`).join('')}</div>`;
-      const swatches = (key, list) => `<div class="swatches">${list.map(c => `<button type="button" class="sw ${a[key] === c ? 'on' : ''}" data-av="${key}" data-v="${c}" style="--c:${c}" aria-label="${c}"></button>`).join('')}</div>`;
-      let inner = '';
-      if (lookTab === 'face') inner = `
-        <h4>النوع</h4>${opts('kind', AVATAR.kinds, AVATAR_LABELS.kind)}
-        <h4>${a.kind === 'robot' ? 'لون الهيكل' : 'لون البشرة'}</h4>${swatches('skin', a.kind === 'robot' ? AVATAR.robotSkins : AVATAR.skins)}
-        ${a.kind === 'human' ? `<h4>العيون</h4>${opts('eyes', AVATAR.eyes, AVATAR_LABELS.eyes)}<h4>الحواجب</h4>${opts('brows', AVATAR.brows, AVATAR_LABELS.brows)}` : ''}
-        <h4>الفم</h4>${opts('mouth', AVATAR.mouths, AVATAR_LABELS.mouth)}
-        ${a.kind === 'human' ? `<h4>اللحية</h4>${opts('facial', AVATAR.facials, AVATAR_LABELS.facial)}<label class="check"><input type="checkbox" data-blush ${a.blush ? 'checked' : ''}> خدود وردية</label>` : ''}`;
-      else if (lookTab === 'hair') inner = `
-        ${a.kind === 'human' ? `<h4>تسريحة الشعر</h4>${opts('hair', AVATAR.hairs, AVATAR_LABELS.hair)}<h4>لون الشعر</h4>${swatches('hairColor', AVATAR.hairColors)}` : ''}
-        <h4>غطاء الرأس</h4>${opts('headwear', a.kind === 'robot' ? ['none', 'cap', 'beanie', 'gradcap'] : AVATAR.headwears, AVATAR_LABELS.headwear)}
-        ${['hijab', 'cap', 'beanie'].includes(a.headwear) ? `<h4>لون غطاء الرأس</h4>${swatches('headwearColor', AVATAR.headwearColors)}` : ''}`;
-      else if (lookTab === 'style') inner = `
-        <h4>الملابس</h4>${opts('outfit', AVATAR.outfits, AVATAR_LABELS.outfit)}
-        <h4>لون الملابس</h4>${swatches('outfitColor', AVATAR.outfitColors)}
-        <h4>النظارات</h4>${opts('glasses', a.kind === 'robot' ? ['none', 'visor'] : AVATAR.glasses, AVATAR_LABELS.glasses)}
-        <h4>إكسسوار</h4>${opts('accessory', a.kind === 'robot' ? ['none', 'headphones', 'headset'] : AVATAR.accessories, AVATAR_LABELS.accessory)}`;
-      else inner = `<h4>هالة الخلفية</h4><div class="aura-grid">${Object.entries(AURAS).map(([k, [c1, c2]]) => `<button type="button" class="aura ${a.aura === k ? 'on' : ''}" data-av="aura" data-v="${k}" style="--c1:${c1};--c2:${c2}"><span></span>${AVATAR_LABELS.aura[k]}</button>`).join('')}</div>`;
-      body.innerHTML = `<div class="look-tabs">${LOOK_TABS.map(([k, l]) => `<button type="button" data-look="${k}" class="${k === lookTab ? 'on' : ''}">${l}</button>`).join('')}
-        <button type="button" class="btn subtle sm" id="dice2">${icon('shuffle', 15)} عشوائي</button></div><div class="look-body">${inner}</div>`;
+      const list = MODELS.filter(x => (gFilter === 'all' || x.g === gFilter) && (tagFilter === 'all' || x.tags.includes(tagFilter)));
+      const chips = (key, items) => `<div class="chips wrap">${items.map(it => `<button type="button" class="chip ${a[key] === it.id ? 'on' : ''}" data-av="${key}" data-v="${it.id}">${it.label}</button>`).join('')}</div>`;
+      body.innerHTML = `
+        <div class="look-bar">
+          <div class="seg sm" id="gSeg">${[['all', 'الكل'], ['m', 'رجال'], ['f', 'نساء']].map(([k, l]) => `<button type="button" data-g="${k}" class="${k === gFilter ? 'on' : ''}">${l}</button>`).join('')}</div>
+          <div class="chips" id="tagChips"><button type="button" class="chip ${tagFilter === 'all' ? 'on' : ''}" data-tag="all">كل الأنماط</button>${Object.entries(MODEL_TAGS).map(([k, l]) => `<button type="button" class="chip ${tagFilter === k ? 'on' : ''}" data-tag="${k}">${l}</button>`).join('')}</div>
+          <button type="button" class="btn subtle sm" id="dice2">${icon('shuffle', 15)} عشوائي</button>
+        </div>
+        <div class="model-grid">${list.map(x => `
+          <button type="button" class="model-card ${a.model === x.id ? 'on' : ''}" data-model="${x.id}" style="--a1:${AURAS[a.aura][0]};--a2:${AURAS[a.aura][1]}">
+            <span class="mc-img"><img src="${thumbUrl(x.id)}" alt="" loading="lazy"></span><b>${esc(x.label)}</b>
+          </button>`).join('') || '<p class="muted">ما في شخصيات بهالفلتر.</p>'}</div>
+        <div class="look-grid">
+          <div><h4>النظارات</h4>${modelInfo(a.model).glasses ? '<p class="muted small">هالشخصية لابسة نظارة أصلاً 👓</p>' : chips('glasses', GLASSES)}</div>
+          <div><h4>التعبير الافتراضي</h4>${chips('expression', EXPRESSIONS)}</div>
+          <div><h4>الإضاءة</h4>${chips('light', LIGHTS)}</div>
+          <div><h4>هالة الخلفية</h4><div class="aura-row">${Object.entries(AURAS).map(([k, [c1, c2]]) => `<button type="button" class="aura-dot ${a.aura === k ? 'on' : ''}" data-av="aura" data-v="${k}" style="--c1:${c1};--c2:${c2}" title="${AVATAR_LABELS.aura[k]}"></button>`).join('')}</div></div>
+        </div>
+        <p class="muted small credit">${icon('sparkles', 13)} شخصيات ثلاثية الأبعاد حقيقية مع تعابير وجه (ARKit) — مبنية على مكتبة Microsoft Rocketbox المفتوحة.</p>`;
     } else {
       body.innerHTML = `
         <p class="muted">«الوصايا» تعليمات دائمة يلتزم فيها المدرّب بكل رد — استخدمها لتخصيص تجربتك بدقة.</p>
@@ -133,26 +132,41 @@ export async function render(root, [id], query) {
     if (t) { m.personality[t.dataset.trait] = +t.value; root.querySelector(`#o-${t.dataset.trait}`).textContent = t.value; refreshText(); }
   });
   root.addEventListener('change', e => {
-    if (e.target.matches('[data-blush]')) { m.avatar.blush = e.target.checked; refreshAvatar(); }
   });
   root.addEventListener('click', e => {
     const t = e.target;
     const tb = t.closest('[data-tab]');
     if (tb) { tab = tb.dataset.tab; root.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === tb)); paintTab(); return; }
-    const lk = t.closest('[data-look]');
-    if (lk) { lookTab = lk.dataset.look; paintTab(); return; }
-    const avb = t.closest('[data-av]');
-    if (avb) {
-      m.avatar[avb.dataset.av] = avb.dataset.v;
-      if (avb.dataset.av === 'kind') m.avatar.skin = (avb.dataset.v === 'robot' ? AVATAR.robotSkins : AVATAR.skins)[2];
-      if (avb.dataset.av === 'headwear' && avb.dataset.v === 'ghutra') m.avatar.headwearColor = '#F8FAFC';
-      m.avatar = normalizeAvatar(m.avatar);
-      sound.pop(); paintTab(); refreshAvatar();
+    const gb = t.closest('[data-g]');
+    if (gb) { gFilter = gb.dataset.g; paintTab(); return; }
+    const tg = t.closest('[data-tag]');
+    if (tg) { tagFilter = tg.dataset.tag; paintTab(); return; }
+    const mc = t.closest('[data-model]');
+    if (mc) {
+      m.avatar = normalizeAvatar({ ...m.avatar, model: mc.dataset.model });
+      root.querySelectorAll('.model-card').forEach(x => x.classList.toggle('on', x === mc));
+      sound.pop(); refreshAvatar(); paintTab();
       return;
     }
-    if (t.closest('#dice') || t.closest('#dice2')) { m.avatar = randomAvatar(); sound.pop(); refreshAvatar(); if (tab === 'look') paintTab(); return; }
+    const avb = t.closest('[data-av]');
+    if (avb) {
+      m.avatar = normalizeAvatar({ ...m.avatar, [avb.dataset.av]: avb.dataset.v });
+      sound.pop(); paintTab(); refreshAvatar(avb.dataset.av !== 'light' && avb.dataset.av !== 'aura');
+      return;
+    }
+    if (t.closest('#dice') || t.closest('#dice2')) { m.avatar = randomAvatar(gFilter === 'all' ? {} : { g: gFilter }); sound.pop(); refreshAvatar(); if (tab === 'look') paintTab(); return; }
     const md = t.closest('[data-mood]');
-    if (md) { mood = md.dataset.mood; root.querySelectorAll('.moods button').forEach(x => x.classList.toggle('on', x === md)); setMood($('#pvAv'), mood); return; }
+    if (md) {
+      mood = md.dataset.mood;
+      root.querySelectorAll('.moods button').forEach(x => x.classList.toggle('on', x === md));
+      setMood($('#pvAv'), mood);
+      if (mood === 'talking') {
+        const phrase = samplePhrase(m);
+        feedSpeech($('#pvAv'), phrase);
+        setTimeout(() => { if (mood !== 'talking') return; mood = 'idle'; setMood($('#pvAv'), 'happy'); setTimeout(() => setMood($('#pvAv'), mood), 1200); root.querySelectorAll('.moods button').forEach(x => x.classList.toggle('on', x.dataset.mood === 'idle')); }, Math.min(9000, 900 + phrase.length * 60));
+      }
+      return;
+    }
     const st = t.closest('[data-style]');
     if (st) {
       const s = st.dataset.style;
@@ -169,7 +183,7 @@ export async function render(root, [id], query) {
       const { key, emoji, ...rest } = structuredClone(TEMPLATES.find(x => x.key === tpl.dataset.tpl));
       m = { ...blank(), ...rest, template: key, avatar: normalizeAvatar(rest.avatar) };
       root.querySelectorAll('.tpl').forEach(x => x.classList.toggle('on', x === tpl));
-      sound.chime(); paintPreview(); paintTab();
+      sound.chime(); refreshAvatar(); refreshText(); paintTab();
     }
   });
 
@@ -209,7 +223,9 @@ export async function render(root, [id], query) {
   });
 
   paintPreview();
+  mountStages(root);
   paintTab();
+  MODELS.slice(0, 6).forEach(x => preload(x.id));
 }
 
 export { DIRECTOR };

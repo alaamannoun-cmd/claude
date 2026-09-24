@@ -13,7 +13,7 @@ export const DIRECTOR = {
   dialect: 'levantine',
   catchphrase: 'خطوة صغيرة كل يوم أقوى من قفزة كل شهر.',
   rules: '',
-  avatar: { kind: 'robot', skin: '#FDE68A', mouth: 'smile', eyes: 'round', outfit: 'suit', outfitColor: '#1E293B', aura: 'gold', accessory: 'none', headwear: 'none' },
+  avatar: { model: 'Business_Male_05', glasses: 'none', aura: 'gold', light: 'warm', expression: 'friendly' },
 };
 
 export const TEMPLATES = [
@@ -26,7 +26,7 @@ export const TEMPLATES = [
     personality: { warmth: 55, strictness: 70, humor: 45, detail: 60, socratic: 60 },
     styles: ['project', 'practical'], dialect: 'levantine',
     catchphrase: 'الكود اللي ما جرّبته، ما بتعرفه.',
-    avatar: { kind: 'human', skin: '#E8B48A', hair: 'curly', hairColor: '#1F1B24', eyes: 'round', brows: 'bold', mouth: 'smirk', facial: 'stubble', glasses: 'square', headwear: 'none', accessory: 'headphones', outfit: 'hoodie', outfitColor: '#6D5DFC', aura: 'aurora' },
+    avatar: { model: 'Male_Adult_17', glasses: 'rect', aura: 'aurora', light: 'studio', expression: 'friendly' },
   },
   {
     key: 'english', emoji: '🗣️',
@@ -37,7 +37,7 @@ export const TEMPLATES = [
     personality: { warmth: 90, strictness: 35, humor: 70, detail: 45, socratic: 50 },
     styles: ['story', 'drill'], dialect: 'mixed',
     catchphrase: 'Mistakes are proof you are trying!',
-    avatar: { kind: 'human', skin: '#F5CBA7', hair: 'long', hairColor: '#3B2A20', eyes: 'smile', brows: 'arched', mouth: 'smile', facial: 'none', glasses: 'none', headwear: 'hijab', headwearColor: '#A78BFA', accessory: 'none', outfit: 'tee', outfitColor: '#F472B6', aura: 'rose', blush: true },
+    avatar: { model: 'Female_Adult_06', glasses: 'none', aura: 'rose', light: 'warm', expression: 'smile' },
   },
   {
     key: 'fitness', emoji: '🏋️',
@@ -48,7 +48,7 @@ export const TEMPLATES = [
     personality: { warmth: 60, strictness: 90, humor: 50, detail: 35, socratic: 20 },
     styles: ['drill', 'challenge'], dialect: 'levantine',
     catchphrase: 'الالتزام بيغلب الحماس.',
-    avatar: { kind: 'human', skin: '#B07A4F', hair: 'buzz', hairColor: '#1F1B24', eyes: 'sharp', brows: 'bold', mouth: 'grin', facial: 'beard', glasses: 'none', headwear: 'cap', headwearColor: '#EF4444', accessory: 'none', outfit: 'sport', outfitColor: '#EF4444', aura: 'sunset' },
+    avatar: { model: 'Sports_Male_04', glasses: 'none', aura: 'sunset', light: 'dramatic', expression: 'friendly' },
   },
   {
     key: 'energy', emoji: '☀️',
@@ -59,7 +59,7 @@ export const TEMPLATES = [
     personality: { warmth: 65, strictness: 55, humor: 25, detail: 75, socratic: 75 },
     styles: ['practical', 'visual'], dialect: 'msa',
     catchphrase: 'افهم الفيزياء، تفهم النظام.',
-    avatar: { kind: 'human', skin: '#F5CBA7', hair: 'bun', hairColor: '#6B4226', eyes: 'round', brows: 'arched', mouth: 'smile', facial: 'none', glasses: 'round', headwear: 'none', accessory: 'earring', outfit: 'lab', outfitColor: '#10B981', aura: 'forest' },
+    avatar: { model: 'Business_Female_04', glasses: 'round', aura: 'forest', light: 'cool', expression: 'friendly' },
   },
   {
     key: 'career', emoji: '💼',
@@ -70,7 +70,7 @@ export const TEMPLATES = [
     personality: { warmth: 70, strictness: 50, humor: 35, detail: 50, socratic: 55 },
     styles: ['story', 'practical'], dialect: 'gulf',
     catchphrase: 'التجارة شطارة، والشطارة صبر.',
-    avatar: { kind: 'human', skin: '#D19A6A', hair: 'short', hairColor: '#1F1B24', eyes: 'round', brows: 'soft', mouth: 'calm', facial: 'beard', glasses: 'none', headwear: 'ghutra', headwearColor: '#F8FAFC', accessory: 'none', outfit: 'thobe', outfitColor: '#F8FAFC', aura: 'gold' },
+    avatar: { model: 'Male_Adult_19', glasses: 'none', aura: 'gold', light: 'warm', expression: 'friendly' },
   },
   {
     key: 'data', emoji: '📊',
@@ -81,7 +81,7 @@ export const TEMPLATES = [
     personality: { warmth: 70, strictness: 45, humor: 55, detail: 65, socratic: 60 },
     styles: ['visual', 'project'], dialect: 'english',
     catchphrase: 'Plot it before you trust it.',
-    avatar: { kind: 'human', skin: '#FDE3CF', hair: 'ponytail', hairColor: '#C2410C', eyes: 'round', brows: 'soft', mouth: 'smile', facial: 'none', glasses: 'none', headwear: 'none', accessory: 'headset', outfit: 'tee', outfitColor: '#0EA5E9', aura: 'ocean', blush: true },
+    avatar: { model: 'Female_Party_02', glasses: 'none', aura: 'ocean', light: 'cool', expression: 'smile' },
   },
   {
     key: 'math', emoji: '📐',
@@ -92,17 +92,17 @@ export const TEMPLATES = [
     personality: { warmth: 60, strictness: 60, humor: 40, detail: 55, socratic: 95 },
     styles: ['challenge', 'visual'], dialect: 'msa',
     catchphrase: 'السؤال الجيد نصف الحل.',
-    avatar: { kind: 'human', skin: '#E8B48A', hair: 'bald', hairColor: '#9CA3AF', eyes: 'sleepy', brows: 'bold', mouth: 'smile', facial: 'mustache', glasses: 'round', headwear: 'none', accessory: 'none', outfit: 'suit', outfitColor: '#0F766E', aura: 'night' },
+    avatar: { model: 'Male_Adult_13', glasses: 'round', aura: 'night', light: 'studio', expression: 'serious' },
   },
   {
     key: 'habits', emoji: '⚡',
     name: 'زَخَم', title: 'مدرب إنتاجية وعادات',
     specialty: 'بناء العادات، إدارة الوقت، التركيز العميق، ومكافحة التسويف',
     scope: 'روتين يومي، أنظمة متابعة، تقنيات تركيز، وتحويل الأهداف الكبيرة لخطوات صغيرة',
-    description: 'روبوت متحمّس يحوّل أي هدف ضخم إلى خطوات صغيرة لا تستطيع رفضها.',
+    description: 'شاب متحمّس يحوّل أي هدف ضخم إلى خطوات صغيرة لا تستطيع رفضها.',
     personality: { warmth: 75, strictness: 65, humor: 60, detail: 30, socratic: 40 },
     styles: ['practical', 'challenge'], dialect: 'levantine',
     catchphrase: 'دقيقتين بس… وابدأ!',
-    avatar: { kind: 'robot', skin: '#A7F3D0', mouth: 'smile', eyes: 'round', outfit: 'hoodie', outfitColor: '#0F766E', aura: 'mint', accessory: 'headphones', headwear: 'none' },
+    avatar: { model: 'Male_Adult_04', glasses: 'none', aura: 'mint', light: 'studio', expression: 'smile' },
   },
 ];

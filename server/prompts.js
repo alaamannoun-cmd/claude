@@ -1,5 +1,5 @@
 // All agent prompts live here. Personality sliders are translated into concrete teaching behaviour.
-import { TRAITS, DIALECTS, STYLES, MEMORY_SECTIONS, ROUNDTABLE_STYLES, LESSON_TYPES, AVATAR, AURAS } from '../public/js/catalog.js';
+import { TRAITS, DIALECTS, STYLES, MEMORY_SECTIONS, ROUNDTABLE_STYLES, LESSON_TYPES, MODELS, AURAS, GLASSES, LIGHTS, EXPRESSIONS } from '../public/js/catalog.js';
 import { memoryForPrompt } from './memory.js';
 import { today } from './store.js';
 
@@ -354,11 +354,12 @@ export function teamMessages(director, spec) {
 الوقت المتاح أسبوعياً: ${spec.hours} ساعة
 
 اقترح من 2 إلى 3 مدرّبين متكاملين (تخصصات لا تتكرر) يخدمون هذا الهدف، بشخصيات متنوعة ومناسبة للهدف والمستوى.
-خيارات المظهر المسموحة:
-kind: human|robot؛ hair: ${AVATAR.hairs.join('|')}؛ headwear: ${AVATAR.headwears.join('|')}؛ facial: ${AVATAR.facials.join('|')}؛ glasses: ${AVATAR.glasses.join('|')}؛ accessory: ${AVATAR.accessories.join('|')}؛ outfit: ${AVATAR.outfits.join('|')}؛ aura: ${Object.keys(AURAS).join('|')}؛ skin: رقم 0-6.
+المظهر: شخصيات ثلاثية الأبعاد واقعية، اختر لكل مدرّب model يناسب اسمه وجنسه وتخصصه من هذه القائمة فقط:
+${MODELS.map(m => `${m.id} (${m.g === 'f' ? 'امرأة' : 'رجل'} — ${m.label})`).join('، ')}
+glasses: ${GLASSES.map(g => g.id).join('|')}؛ aura: ${Object.keys(AURAS).join('|')}؛ light: ${LIGHTS.map(l => l.id).join('|')}؛ expression: ${EXPRESSIONS.map(e => e.id).join('|')}.
 styles المسموحة: ${STYLES.map(s => s.id).join('|')}. dialect: ${DIALECTS.map(d => d.id).join('|')}.
 أرجع كائن json صالح فقط:
-{"message":"رسالة ترحيب قصيرة منك تشرح لماذا هذا الفريق","goal_title":"صياغة واضحة للهدف الرئيسي","mentors":[{"name":"اسم قصير","title":"...","specialty":"...","scope":"...","description":"جملتان","personality":{"warmth":70,"strictness":60,"humor":40,"detail":50,"socratic":50},"styles":["practical"],"dialect":"levantine","catchphrase":"...","avatar":{"kind":"human","skin":2,"hair":"short","headwear":"none","facial":"none","glasses":"none","accessory":"none","outfit":"tee","aura":"aurora"}}]}`,
+{"message":"رسالة ترحيب قصيرة منك تشرح لماذا هذا الفريق","goal_title":"صياغة واضحة للهدف الرئيسي","mentors":[{"name":"اسم قصير","title":"...","specialty":"...","scope":"...","description":"جملتان","personality":{"warmth":70,"strictness":60,"humor":40,"detail":50,"socratic":50},"styles":["practical"],"dialect":"levantine","catchphrase":"...","avatar":{"model":"Female_Adult_06","glasses":"none","aura":"rose","light":"studio","expression":"friendly"}}]}`,
     },
   ];
 }

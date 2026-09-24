@@ -1,9 +1,8 @@
 import { state, mentorById, team, applyProfile, upsert } from '../store.js';
 import { api, stream } from '../api.js';
 import { md } from '../markdown.js';
-import { setMood } from '../avatar.js';
 import { DIALECTS, STYLES, LESSON_TYPES } from '../catalog.js';
-import { av, bondMeter, traitBars, pathWizard, goalModal, emptyState } from '../components.js';
+import { av, bondMeter, traitBars, pathWizard, goalModal, emptyState, stageBox, mountStages, setMood, feedSpeech } from '../components.js';
 import { esc, icon, toast, sound, confetti, copyText, autoGrow, clock, confirmBox, dueLabel, todayStr } from '../ui.js';
 
 export async function render(root, [id], query) {
@@ -22,7 +21,7 @@ export async function render(root, [id], query) {
   <div class="chat-layout ${lesson ? 'in-lesson' : ''}">
     <aside class="mentor-panel card" id="mpanel">
       <div class="stage" style="--glow:${glow(mentor)}">
-        <div class="stage-av" id="stageAv">${av(mentor, 190, { mood: 'idle' })}</div>
+        <div class="stage-av" id="stageAv">${stageBox(mentor, { framing: 'bust', mood: 'idle' })}</div>
         <div class="stage-status" id="stageStatus"><i></i> متاح</div>
       </div>
       <h2>${esc(mentor.name)}</h2>
@@ -64,6 +63,7 @@ export async function render(root, [id], query) {
   </div>`;
 
   const $ = s => root.querySelector(s);
+  mountStages(root);
   const list = $('#msgs');
   const form = $('#composer');
   const ta = form.msg;
@@ -176,6 +176,7 @@ export async function render(root, [id], query) {
         delta: d => {
           if (!text) { status('talking', 'يكتب…'); setMood($('#live'), 'talking'); }
           text += d.t;
+          feedSpeech($('#stageAv'), d.t);
           raf ||= requestAnimationFrame(flush);
         },
         done: d => {
@@ -236,6 +237,11 @@ export async function render(root, [id], query) {
     ta.value = '';
     ta.dispatchEvent(new Event('input'));
     send(t);
+  });
+  let listenTimer = 0;
+  ta.addEventListener('input', () => {
+    if (busy) return;
+    if (ta.value.trim()) { setMood($('#stageAv'), 'listening'); clearTimeout(listenTimer); listenTimer = setTimeout(() => !busy && setMood($('#stageAv'), 'idle'), 2600); }
   });
   ta.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); }

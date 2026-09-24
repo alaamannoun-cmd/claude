@@ -4,3 +4,6 @@ data/
 .env
 *.tmp
 .DS_Store
+tools/avatar-pipeline/node_modules/
+tools/avatar-pipeline/src/
+tools/avatar-pipeline/glb_raw/

@@ -1,6 +1,7 @@
 // First-run experience: meet the Director → (optional) API key → your goal → the Director proposes a team.
 import { api } from '../api.js';
-import { avatarSVG, randomAvatar, setMood } from '../avatar.js';
+import { randomAvatar, modelInfo } from '../avatar.js';
+import { av, stageBox, mountStages, setMood, feedSpeech, stageReady } from '../components.js';
 import { DIRECTOR } from '../templates.js';
 import { TRAITS } from '../catalog.js';
 import { esc, icon, toast, confetti, sound, autoGrow } from '../ui.js';
@@ -22,18 +23,22 @@ export async function render(root, onDone) {
 
   function say(text) {
     return `<div class="onb-director">
-      <div class="onb-av">${avatarSVG(d.avatar, { mood: 'talking' })}</div>
+      <div class="onb-av">${stageBox(d, { framing: 'portrait', mood: 'talking' })}</div>
       <div class="bubble-say"><b>${esc(d.name)}</b><p id="sayText" data-full="${esc(text)}"></p></div>
     </div>`;
   }
 
-  function typeOut() {
+  async function typeOut() {
     const p = root.querySelector('#sayText');
     if (!p) return;
+    await stageReady(root.querySelector('.onb-av'));
+    if (!p.isConnected) return;
     const full = p.dataset.full;
     let i = 0;
     const tick = () => {
-      i = Math.min(full.length, i + 2);
+      const next = Math.min(full.length, i + 2);
+      feedSpeech(root.querySelector('.onb-av'), full.slice(i, next));
+      i = next;
       p.textContent = full.slice(0, i);
       if (i < full.length) setTimeout(tick, 16);
       else setMood(root.querySelector('.onb-av'), 'idle');
@@ -81,7 +86,7 @@ export async function render(root, onDone) {
       <div class="proposal">${s.proposal.mentors.map((m, i) => `
         <div class="prop-card ${s.off.has(i) ? 'off' : ''}" data-i="${i}">
           <button class="prop-toggle" data-toggle="${i}" aria-label="تضمين/استبعاد">${icon(s.off.has(i) ? 'plus' : 'check', 16)}</button>
-          <div class="prop-av">${avatarSVG(m.avatar, { mood: 'idle' })}<button class="icon-btn sm dice" data-dice="${i}" title="غيّر الشكل">${icon('shuffle', 15)}</button></div>
+          <div class="prop-av">${av(m, 120)}<button class="icon-btn sm dice" data-dice="${i}" title="غيّر الشكل">${icon('shuffle', 15)}</button></div>
           <h3>${esc(m.name)}</h3><p class="prop-title">${esc(m.title)}</p>
           <p class="prop-desc">${esc(m.description || m.specialty)}</p>
           <div class="mini-traits">${TRAITS.map(t => `<span title="${t.label}">${t.icon}<i><b style="width:${m.personality[t.id]}%"></b></i></span>`).join('')}</div>
@@ -93,7 +98,7 @@ export async function render(root, onDone) {
       </div>
       <p class="muted center small">تقدر تعدّل شخصية وشكل أي مدرّب لاحقاً من «صانع المدرّبين».</p>` : `
       <div class="onb-thinking">
-        <div class="onb-av big">${avatarSVG(d.avatar, { mood: 'thinking' })}</div>
+        <div class="onb-av big">${stageBox(d, { framing: 'portrait', mood: 'thinking' })}</div>
         <h2>${esc(d.name)} يجمع فريقك…</h2>
         <p class="muted">يحلّل هدفك «${esc(s.goal.slice(0, 80))}» ويختار التخصصات والشخصيات المناسبة</p>
         <div class="typing"><i></i><i></i><i></i></div>
@@ -102,6 +107,7 @@ export async function render(root, onDone) {
 
   function paint() {
     root.innerHTML = steps[s.step]();
+    mountStages(root);
     typeOut();
     bind();
   }
@@ -158,8 +164,8 @@ export async function render(root, onDone) {
       const dice = e.target.closest('[data-dice]');
       if (dice) {
         const m = s.proposal.mentors[+dice.dataset.dice];
-        m.avatar = randomAvatar();
-        dice.closest('.prop-av').firstElementChild.outerHTML = avatarSVG(m.avatar, { mood: 'happy' });
+        m.avatar = randomAvatar({ g: modelInfo(m.avatar?.model).g });
+        dice.closest('.prop-av').querySelector('.av').outerHTML = av(m, 120);
         sound.pop();
       }
     });

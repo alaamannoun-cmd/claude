@@ -1,9 +1,8 @@
 import { state, team, director, reminders, mentorById } from '../store.js';
 import { api } from '../api.js';
 import { levelInfo } from '../catalog.js';
-import { av, bondMeter, pathWizard, goalModal } from '../components.js';
+import { av, bondMeter, pathWizard, goalModal, stageBox, mountStages, setMood, feedSpeech } from '../components.js';
 import { esc, icon, timeGreeting, dueLabel, ring, timeAgo, todayStr, fmtDate } from '../ui.js';
-import { setMood } from '../avatar.js';
 
 export async function render(root) {
   const p = state.profile;
@@ -22,7 +21,7 @@ export async function render(root) {
   <div class="page home">
     <section class="hero card">
       <div class="hero-glow"></div>
-      <a class="hero-av" href="#/chat/${d.id}" title="تحدّث مع ${esc(d.name)}">${av(d, 132, { mood: 'thinking' })}</a>
+      <a class="hero-av" href="#/chat/${d.id}" title="تحدّث مع ${esc(d.name)}">${stageBox(d, { framing: 'portrait', mood: 'thinking' })}</a>
       <div class="hero-body">
         <div class="eyebrow">${icon('crown', 14)} ${esc(d.name)} · ${esc(d.title)}</div>
         <h1 class="hero-title">${timeGreeting()} يا ${esc(p.name)} <span class="wave">👋</span></h1>
@@ -113,6 +112,7 @@ export async function render(root) {
     </section>
   </div>`;
 
+  mountStages(root);
   const ask = root.querySelector('#askbar');
   ask.addEventListener('submit', e => {
     e.preventDefault();
@@ -137,7 +137,10 @@ async function loadBrief(root, d) {
   try {
     const b = await api.post('/api/brief', {});
     if (!box.isConnected) return;
-    setMood(root.querySelector('.hero-av'), 'talking');
+    const hero = root.querySelector('.hero-av');
+    setMood(hero, 'talking');
+    const spoken = [b.greeting, ...b.focus.map(f => f.text), b.nudge].filter(Boolean).join('. ');
+    feedSpeech(hero, spoken);
     box.innerHTML = `
       <p class="brief-greet">${esc(b.greeting)}</p>
       <ol class="focus">${b.focus.map((f, i) => {
@@ -147,7 +150,7 @@ async function loadBrief(root, d) {
       }).join('')}</ol>
       ${b.nudge ? `<p class="nudge">${icon('bolt', 15)} ${esc(b.nudge)}</p>` : ''}
       <button class="link small" id="refreshBrief">${icon('refresh', 13)} حدّث الموجز</button>`;
-    setTimeout(() => setMood(root.querySelector('.hero-av'), 'idle'), 2200);
+    setTimeout(() => { setMood(hero, 'happy'); setTimeout(() => setMood(hero, 'idle'), 1400); }, Math.min(7000, 1200 + spoken.length * 55));
     box.querySelector('#refreshBrief').onclick = async () => {
       box.innerHTML = '<div class="skel w80"></div><div class="skel w60"></div>';
       setMood(root.querySelector('.hero-av'), 'thinking');

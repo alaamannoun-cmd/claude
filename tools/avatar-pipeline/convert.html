@@ -1,0 +1,127 @@
+<!doctype html><html><body>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+// FBX (Rocketbox, 3ds Max) -> clean GLB for the web:
+//   * single skinned mesh, indexed (merged vertices)
+//   * curated ARKit + viseme morph targets with standard names
+//   * resized textures (JPEG color/normal, PNG with alpha for hair/lashes)
+import * as THREE from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { TGALoader } from 'three/addons/loaders/TGALoader.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+
+const KEEP = {
+  // ARKit (AK_xx_Name) -> camelCase
+  AK: ['BrowDownLeft', 'BrowDownRight', 'BrowInnerUp', 'BrowOuterUpLeft', 'BrowOuterUpRight', 'CheekPuff', 'CheekSquintLeft', 'CheekSquintRight',
+    'EyeBlinkLeft', 'EyeBlinkRight', 'EyeSquintLeft', 'EyeSquintRight', 'EyeWideLeft', 'EyeWideRight', 'JawOpen', 'MouthClose',
+    'MouthDimpleLeft', 'MouthDimpleRight', 'MouthFrownLeft', 'MouthFrownRight', 'MouthFunnel', 'MouthPucker', 'MouthPressLeft', 'MouthPressRight',
+    'MouthRollLower', 'MouthRollUpper', 'MouthShrugLower', 'MouthShrugUpper', 'MouthSmileLeft', 'MouthSmileRight', 'MouthStretchLeft', 'MouthStretchRight',
+    'MouthUpperUpLeft', 'MouthUpperUpRight', 'MouthLowerDownLeft', 'MouthLowerDownRight', 'NoseSneerLeft', 'NoseSneerRight'],
+  // FACS units that read nicely for smiles
+  AU: ['06_CheekRaiser', '12_LipCornerPuller'],
+  VI: ['Sil', 'PP', 'FF', 'TH', 'DD', 'KK', 'CH', 'SS', 'nn', 'RR', 'aa', 'E', 'I', 'O', 'U'],
+};
+const lc = s => s[0].toLowerCase() + s.slice(1);
+function mapName(raw) {
+  const n = raw.replace(/^.*\./, '');
+  let m = n.match(/^AK_\d+_(\w+)$/); if (m && KEEP.AK.includes(m[1])) return lc(m[1]);
+  m = n.match(/^AU_(\d+_\w+)$/); if (m && KEEP.AU.includes(m[1])) return 'au' + m[1].replace(/^\d+_/, '');
+  m = n.match(/^AA_VI_\d+_(\w+)$/); if (m && KEEP.VI.includes(m[1])) return 'viseme_' + m[1];
+  return null;
+}
+
+function toCanvas(tex, size) {
+  const img = tex.image;
+  const src = document.createElement('canvas');
+  src.width = img.width; src.height = img.height;
+  const sctx = src.getContext('2d');
+  if (img.data) {
+    const data = new ImageData(new Uint8ClampedArray(img.data.buffer, img.data.byteOffset, img.data.byteLength), img.width, img.height);
+    sctx.putImageData(data, 0, 0);
+  } else sctx.drawImage(img, 0, 0);
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(src, 0, 0, size, size);
+  return c;
+}
+function resized(tex, size, mime, colorSpace) {
+  if (!tex) return null;
+  const t = new THREE.CanvasTexture(toCanvas(tex, size));
+  t.flipY = tex.flipY;
+  t.colorSpace = colorSpace;
+  t.wrapS = tex.wrapS; t.wrapT = tex.wrapT;
+  t.userData.mimeType = mime;
+  t.name = tex.name;
+  return t;
+}
+
+window.convert = async (dir, name) => {
+  const manager = new THREE.LoadingManager();
+  manager.addHandler(/\.tga$/i, new TGALoader(manager));
+  const texReady = new Promise(r => { manager.onLoad = r; });
+  const loader = new FBXLoader(manager);
+  loader.setResourcePath(`src/${dir}/${name}/Textures/`);
+  const obj = await loader.loadAsync(`src/${dir}/${name}/Export/${name}_facial.fbx`);
+  await texReady;
+  const meshes = [];
+  obj.traverse(o => { if (o.isSkinnedMesh) meshes.push(o); });
+  const extra = [];
+  obj.traverse(o => { if (o.isMesh && !o.isSkinnedMesh) extra.push(o); });
+  extra.forEach(o => o.parent.remove(o));
+  obj.animations = [];
+  const report = { verts: 0, morphs: 0, names: [], mats: [] };
+  for (const mesh of meshes) {
+    const g = mesh.geometry;
+    const dictIn = mesh.morphTargetDictionary || {};
+    const keep = [];
+    for (const raw of Object.keys(dictIn)) { const n = mapName(raw); if (n) keep.push([raw, n]); }
+    const pos = [], dict = {};
+    keep.forEach(([raw, n], i) => { const a = g.morphAttributes.position[dictIn[raw]].clone(); a.name = n; pos.push(a); dict[n] = i; });
+    g.morphAttributes = pos.length ? { position: pos } : {};
+    g.morphTargetsRelative = true;
+    for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'skinIndex', 'skinWeight'].includes(k)) g.deleteAttribute(k);
+    const merged = mergeVertices(g, 1e-4);
+    mesh.geometry = merged;
+    if (pos.length) { mesh.morphTargetDictionary = dict; mesh.morphTargetInfluences = new Array(pos.length).fill(0); }
+    else { delete mesh.morphTargetDictionary; delete mesh.morphTargetInfluences; }
+    report.verts += merged.attributes.position.count;
+    report.morphs = Math.max(report.morphs, pos.length);
+    if (pos.length) report.names = keep.map(k => k[1]);
+    const mats = [].concat(mesh.material).map(m => {
+      const lower = m.name.toLowerCase();
+      const kind = /glasses/.test(lower) ? 'glasses' : /opacity/.test(lower) ? 'hair' : /head/.test(lower) ? 'skin' : /body/.test(lower) ? 'body' : 'cloth_' + lower.replace(/^[a-z]\d+_/, '').replace(/[^a-z]/g, '');
+      const alpha = kind === 'hair' || kind === 'glasses';
+      const has = t => t && t.image && (t.image.data || t.image.width);
+      const mat = new THREE.MeshStandardMaterial({
+        name: kind,
+        map: has(m.map) ? resized(m.map, kind === 'skin' || kind === 'body' || kind === 'hair' ? 1024 : 512, alpha ? 'image/png' : 'image/jpeg', THREE.SRGBColorSpace) : null,
+        normalMap: has(m.normalMap) ? resized(m.normalMap, kind === 'skin' ? 1024 : 512, 'image/jpeg', THREE.NoColorSpace) : null,
+        roughness: kind === 'skin' ? 0.55 : kind === 'glasses' ? 0.25 : 0.8, metalness: 0,
+      });
+      if (alpha) {
+        if (has(m.alphaMap) && m.alphaMap !== m.map) mat.alphaMap = resized(m.alphaMap, 512, 'image/png', THREE.NoColorSpace);
+        mat.alphaTest = 0.4; mat.side = THREE.DoubleSide; mat.transparent = false;
+      }
+      report.mats.push(kind);
+      return mat;
+    });
+    mesh.material = Array.isArray(mesh.material) ? mats : mats[0];
+  }
+  const merged = { attributes: { position: { count: report.verts } } };
+  const pos = { length: report.morphs };
+  const keep = report.names.map(n => [n, n]);
+  const mesh = { material: report.mats.map(n => ({ name: n })) };
+
+  const exporter = new GLTFExporter();
+  const glb = await exporter.parseAsync(obj, { binary: true, onlyVisible: false, maxTextureSize: 2048 });
+  const box = new THREE.Box3().setFromObject(obj);
+  const bytes = new Uint8Array(glb);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return { b64: btoa(bin), info: { verts: merged.attributes.position.count, morphs: pos.length, names: keep.map(k => k[1]), mats: mesh.material.map(m => m.name), height: box.max.y - box.min.y } };
+};
+window.READY = true;
+</script></body></html>

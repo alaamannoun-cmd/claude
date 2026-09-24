@@ -105,35 +105,51 @@ export const AURAS = {
   mint: ['#0D9488', '#6EE7B7'],
 };
 
-export const AVATAR = {
-  kinds: ['human', 'robot'],
-  skins: ['#FDE3CF', '#F5CBA7', '#E8B48A', '#D19A6A', '#B07A4F', '#8A5A3B', '#5E3B26'],
-  robotSkins: ['#E2E8F0', '#CBD5E1', '#94A3B8', '#FDE68A', '#C4B5FD', '#A7F3D0', '#FBCFE8'],
-  hairs: ['short', 'side', 'curly', 'wavy', 'long', 'bun', 'ponytail', 'afro', 'buzz', 'bald'],
-  hairColors: ['#1F1B24', '#3B2A20', '#6B4226', '#A0522D', '#D6A55C', '#E8D3A2', '#9CA3AF', '#C2410C', '#7C3AED', '#0EA5E9'],
-  eyes: ['round', 'smile', 'sharp', 'sleepy'],
-  brows: ['soft', 'bold', 'arched'],
-  mouths: ['smile', 'grin', 'calm', 'smirk'],
-  facials: ['none', 'stubble', 'beard', 'mustache', 'goatee'],
-  glasses: ['none', 'round', 'square', 'visor'],
-  headwears: ['none', 'hijab', 'ghutra', 'shemagh', 'cap', 'beanie', 'gradcap'],
-  headwearColors: ['#7C5CFF', '#F472B6', '#0EA5E9', '#10B981', '#F59E0B', '#EF4444', '#1E293B', '#F8FAFC', '#A78BFA', '#FB7185'],
-  accessories: ['none', 'headphones', 'headset', 'earring'],
-  outfits: ['tee', 'hoodie', 'suit', 'lab', 'sport', 'thobe'],
-  outfitColors: ['#6D5DFC', '#22D3EE', '#F472B6', '#10B981', '#F59E0B', '#EF4444', '#1E293B', '#F8FAFC', '#0F766E', '#9333EA'],
-};
-
+// ---------- Realistic 3D characters (Microsoft Rocketbox, MIT) ----------
+// g: gender, tags: style filters, glasses: model already wears glasses
+export const MODELS = [
+  { id: 'Business_Male_02', g: 'm', label: 'رسمي ببدلة كحلية', tags: ['formal'] },
+  { id: 'Business_Male_05', g: 'm', label: 'مدير أنيق', tags: ['formal'] },
+  { id: 'Business_Male_04', g: 'm', label: 'خبير مخضرم', tags: ['formal', 'senior'] },
+  { id: 'Male_Adult_13', g: 'm', label: 'أستاذ هادئ', tags: ['casual', 'senior'] },
+  { id: 'Male_Adult_19', g: 'm', label: 'بشماغ وثوب', tags: ['traditional'] },
+  { id: 'Male_Adult_15', g: 'm', label: 'بثوب وطاقية', tags: ['traditional'] },
+  { id: 'Male_Adult_05', g: 'm', label: 'مهندس ميداني', tags: ['casual', 'senior'] },
+  { id: 'Male_Adult_08', g: 'm', label: 'شاب بقميص', tags: ['casual'] },
+  { id: 'Male_Adult_17', g: 'm', label: 'شاب بكاب وهودي', tags: ['casual', 'young'] },
+  { id: 'Male_Adult_04', g: 'm', label: 'شاب مفعم بالطاقة', tags: ['casual', 'young'] },
+  { id: 'Medical_Male_03', g: 'm', label: 'طبيب', tags: ['medical', 'senior'] },
+  { id: 'Sports_Male_04', g: 'm', label: 'مدرب رياضي', tags: ['sport'] },
+  { id: 'Business_Female_04', g: 'f', label: 'سيدة أعمال', tags: ['formal'] },
+  { id: 'Business_Female_01', g: 'f', label: 'مديرة تنفيذية', tags: ['formal'] },
+  { id: 'Business_Female_02', g: 'f', label: 'أستاذة بنظارة', tags: ['formal', 'senior'], glasses: true },
+  { id: 'Female_Adult_06', g: 'f', label: 'بحجاب أبيض', tags: ['traditional'] },
+  { id: 'Female_Adult_10', g: 'f', label: 'بحجاب وعباءة', tags: ['traditional'] },
+  { id: 'Female_Adult_05', g: 'f', label: 'أنيقة بسترة وردية', tags: ['casual'] },
+  { id: 'Female_Adult_12', g: 'f', label: 'مطوّرة بهودي', tags: ['casual', 'young'] },
+  { id: 'Female_Party_02', g: 'f', label: 'مبدعة بشعر مجعّد', tags: ['casual', 'young'] },
+  { id: 'Medical_Female_02', g: 'f', label: 'طبيبة', tags: ['medical'] },
+  { id: 'Sports_Female_02', g: 'f', label: 'مدربة لياقة', tags: ['sport'] },
+];
+export const MODEL_TAGS = { formal: 'رسمي', casual: 'كاجوال', traditional: 'تقليدي', medical: 'طبي', sport: 'رياضي', senior: 'خبرة', young: 'شبابي' };
+export const GLASSES = [
+  { id: 'none', label: 'بدون' },
+  { id: 'round', label: 'دائرية ذهبية' },
+  { id: 'rect', label: 'مستطيلة' },
+  { id: 'bold', label: 'عريضة داكنة' },
+];
+export const LIGHTS = [
+  { id: 'studio', label: 'استوديو' },
+  { id: 'warm', label: 'دافئ' },
+  { id: 'cool', label: 'نهاري' },
+  { id: 'dramatic', label: 'سينمائي' },
+];
+export const EXPRESSIONS = [
+  { id: 'serious', label: 'جاد' },
+  { id: 'friendly', label: 'ودود' },
+  { id: 'smile', label: 'مبتسم' },
+];
 export const AVATAR_LABELS = {
-  kind: { human: 'إنسان', robot: 'روبوت' },
-  hair: { short: 'قصير', side: 'جانبي', curly: 'كيرلي', wavy: 'مموّج', long: 'طويل', bun: 'كعكة', ponytail: 'ذيل حصان', afro: 'أفرو', buzz: 'حلاقة قصيرة', bald: 'أصلع' },
-  eyes: { round: 'دائرية', smile: 'مبتسمة', sharp: 'حادّة', sleepy: 'ناعسة' },
-  brows: { soft: 'ناعمة', bold: 'عريضة', arched: 'مقوّسة' },
-  mouth: { smile: 'ابتسامة', grin: 'ضحكة', calm: 'هادئ', smirk: 'واثق' },
-  facial: { none: 'بدون', stubble: 'خفيفة', beard: 'لحية', mustache: 'شارب', goatee: 'سكسوكة' },
-  glasses: { none: 'بدون', round: 'دائرية', square: 'مربّعة', visor: 'مستقبلية' },
-  headwear: { none: 'بدون', hijab: 'حجاب', ghutra: 'غترة', shemagh: 'شماغ', cap: 'كاب', beanie: 'قبعة صوف', gradcap: 'قبعة تخرّج' },
-  accessory: { none: 'بدون', headphones: 'سماعات', headset: 'سماعة ومايك', earring: 'أقراط' },
-  outfit: { tee: 'تيشيرت', hoodie: 'هودي', suit: 'بدلة', lab: 'روب مختبر', sport: 'رياضي', thobe: 'ثوب' },
   aura: { aurora: 'شفق', sunset: 'غروب', ocean: 'محيط', forest: 'غابة', gold: 'ذهبي', night: 'ليل', rose: 'وردي', mint: 'نعناع' },
 };
 

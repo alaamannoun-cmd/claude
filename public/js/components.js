@@ -1,13 +1,70 @@
 // Shared UI components (avatars, meters, goal editor, path wizard) used across views.
-import { avatarSVG } from './avatar.js';
+import { normalizeAvatar } from './avatar.js';
+import { AvatarStage, stageOf, thumbUrl, portrait, webglOK } from './avatar3d.js';
+import { AURAS } from './catalog.js';
 import { TRAITS, bondInfo } from './catalog.js';
 import { state, team, mentorById, applyProfile, upsert } from './store.js';
 import { api } from './api.js';
 import { esc, icon, openModal, toast, todayStr, sound, confetti } from './ui.js';
 
+const auraVars = a => { const [c1, c2] = AURAS[a.aura] || AURAS.aurora; return `--a1:${c1};--a2:${c2}`; };
+
+/** Small realistic portrait (static image; upgraded to a live-rendered portrait when glasses are chosen). */
 export function av(m, size = 40, { mood = 'idle', round = false, cls = '' } = {}) {
-  const still = size < 56 ? 'still' : '';
-  return `<span class="av ${round ? 'round' : ''} ${cls}" style="--s:${size}px" data-mentor="${esc(m?.id || '')}">${avatarSVG(m?.avatar, { mood, cls: still, label: m?.name })}</span>`;
+  const a = normalizeAvatar(m?.avatar);
+  const custom = a.glasses !== 'none' ? ` data-portrait='${esc(JSON.stringify(a))}'` : '';
+  return `<span class="av ${round ? 'round' : ''} ${cls}" style="--s:${size}px;${auraVars(a)}" data-mentor="${esc(m?.id || '')}" data-mood="${mood}"${custom}><img src="${thumbUrl(a.model)}" alt="${esc(m?.name || '')}" loading="lazy" decoding="async" draggable="false"></span>`;
+}
+
+/** Placeholder for a live 3D avatar; call mountStages(root) after inserting it into the DOM. */
+export function stageBox(m, { framing = 'bust', mood = 'idle', cls = '', interactive = true } = {}) {
+  const a = normalizeAvatar(m?.avatar);
+  return `<div class="live-av ${cls}" style="${auraVars(a)}" data-live='${esc(JSON.stringify(a))}' data-framing="${framing}" data-mood="${mood}" data-interactive="${interactive ? 1 : 0}"><img class="ph" src="${thumbUrl(a.model)}" alt=""></div>`;
+}
+
+export function mountStages(root = document) {
+  const out = [];
+  for (const el of root.querySelectorAll('.live-av[data-live]:not([data-mounted])')) {
+    el.dataset.mounted = '1';
+    if (!webglOK) continue;
+    out.push(new AvatarStage(el, JSON.parse(el.dataset.live), { framing: el.dataset.framing, mood: el.dataset.mood, interactive: el.dataset.interactive === '1' }));
+  }
+  return out;
+}
+
+/** Mood for a live stage (idle | talking | thinking | happy | listening) or a small portrait (CSS). */
+export function setMood(el, mood) {
+  if (!el) return;
+  const st = stageOf(el);
+  if (st) st.setMood(mood);
+  (el.matches?.('.av,.live-av') ? [el] : [...el.querySelectorAll?.('.av,.live-av') || []]).forEach(x => (x.dataset.mood = mood));
+}
+export const feedSpeech = (el, text) => stageOf(el)?.feed(text);
+/** Resolves when a live stage inside `el` has its character loaded (or after `ms`). */
+export async function stageReady(el, ms = 1800) {
+  const t0 = performance.now();
+  while (performance.now() - t0 < ms) {
+    const st = stageOf(el);
+    if (!st || st.char || st.disposed) return;
+    await new Promise(r => setTimeout(r, 80));
+  }
+}
+export function retarget(el, mentor) {
+  const st = stageOf(el);
+  if (st) st.setConfig(mentor.avatar);
+  const box = el.matches?.('.live-av') ? el : el.querySelector?.('.live-av');
+  if (box) { const a = normalizeAvatar(mentor.avatar); box.setAttribute('style', auraVars(a)); }
+}
+
+// upgrade portraits that need live rendering (e.g. added glasses)
+const upgrade = el => {
+  el.removeAttribute('data-portrait-pending');
+  portrait(JSON.parse(el.dataset.portrait)).then(url => { const img = el.querySelector('img'); if (img) img.src = url; }).catch(() => {});
+};
+if (webglOK) {
+  new MutationObserver(() => {
+    for (const el of document.querySelectorAll('.av[data-portrait]:not([data-up])')) { el.dataset.up = '1'; upgrade(el); }
+  }).observe(document.documentElement, { childList: true, subtree: true });
 }
 
 export function bondMeter(m) {

@@ -1,9 +1,10 @@
 import { state, team, director, mentorById, applyProfile, upsert, removeFrom } from '../store.js';
 import { stream, api } from '../api.js';
 import { md, extractSteps } from '../markdown.js';
-import { setMood } from '../avatar.js';
+import { preload } from '../avatar3d.js';
+import { normalizeAvatar } from '../avatar.js';
 import { ROUNDTABLE_STYLES } from '../catalog.js';
-import { av, goalModal, mentorPicker, bindPicker, emptyState } from '../components.js';
+import { av, goalModal, mentorPicker, bindPicker, emptyState, stageBox, mountStages, setMood, feedSpeech, retarget } from '../components.js';
 import { esc, icon, toast, sound, openDrawer, timeAgo, autoGrow, confirmBox } from '../ui.js';
 
 export async function render(root, args, query) {
@@ -32,7 +33,7 @@ export async function render(root, args, query) {
       <div class="table-card card">
         <div class="round-table" id="table">
           <svg class="links" viewBox="0 0 100 100" preserveAspectRatio="none" id="links"></svg>
-          <div class="table-surface"><div class="table-core"><img src="/favicon.svg" alt=""><span id="tableStatus">المجلس بانتظار سؤالك</span></div></div>
+          <div class="table-surface"><div class="table-core"><div class="table-stage" id="tableStage">${stageBox(d, { framing: 'portrait', mood: 'idle' })}</div><span id="tableStatus">المجلس بانتظار سؤالك</span></div></div>
           <div id="seats"></div>
         </div>
       </div>
@@ -186,7 +187,7 @@ export async function render(root, args, query) {
     try {
       await stream(url, body, {
         session: s => { session.id = s.id; },
-        phase: () => { tableStatus(`${d.name} يحلّل السؤال…`); setMood(root.querySelector(`[data-seat="${d.id}"]`), 'thinking'); },
+        phase: () => { tableStatus(`${d.name} يحلّل السؤال…`); setMood(root.querySelector(`[data-seat="${d.id}"]`), 'thinking'); retarget($('#tableStage'), d); setMood($('#tableStage'), 'thinking'); },
         route: r => {
           assigned = r.assignments.map(a => a.mentorId);
           onRoute?.(r);
@@ -199,6 +200,7 @@ export async function render(root, args, query) {
         speaker: s => {
           speaker = s; text = '';
           const who = mentorById(s.mentorId);
+          if (who) { retarget($('#tableStage'), who); setMood($('#tableStage'), 'talking'); }
           light({ assigned: mode === 'roundtable' ? rt.ids : assigned, speaking: s.mentorId, dim: true });
           tableStatus(`${who?.name || ''} ${s.kind === 'synthesis' || s.kind === 'summary' ? 'يكتب الخلاصة…' : 'يتحدث…'}`);
           const special = s.kind === 'synthesis' || s.kind === 'summary';
@@ -206,10 +208,11 @@ export async function render(root, args, query) {
           box = tx.lastElementChild.querySelector('.md');
           tx.scrollTop = tx.scrollHeight;
         },
-        delta: x => { text += x.t; raf ||= requestAnimationFrame(flush); },
+        delta: x => { text += x.t; feedSpeech($('#tableStage'), x.t); raf ||= requestAnimationFrame(flush); },
         speaker_end: () => {
           cancelAnimationFrame(raf); raf = 0;
           if (box) { box.innerHTML = md(text); box.closest('.tx-msg').classList.remove('live'); setMood(box.closest('.tx-msg'), 'idle'); }
+          setMood($('#tableStage'), 'happy');
           box = null;
         },
         done: r => {
@@ -225,6 +228,7 @@ export async function render(root, args, query) {
     } finally {
       cancelAnimationFrame(raf);
       busy = null;
+      setMood($('#tableStage'), 'idle');
       light(mode === 'roundtable' ? { assigned: rt.ids } : {});
       tableStatus('انتهت الجولة — تقدر تسأل سؤال متابعة');
       if (session?.messages?.length) paintTx();
@@ -300,6 +304,8 @@ export async function render(root, args, query) {
   };
 
   paintTable();
+  mountStages(root);
+  seatList.forEach(m => preload(normalizeAvatar(m.avatar).model));
   paintTx();
   paintFoot();
   light(mode === 'roundtable' ? { assigned: rt.ids } : {});
