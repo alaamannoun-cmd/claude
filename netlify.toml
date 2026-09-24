@@ -1,0 +1,8 @@
+# Used when the GitHub repository is connected to Netlify (continuous deploys).
+# For a manual upload, drag dist/sakura-michi-netlify.zip onto https://app.netlify.com/drop
+[build]
+  command = "npm run build && node scripts/package-netlify.mjs"
+  publish = "dist/netlify"
+
+[build.environment]
+  NODE_VERSION = "20"

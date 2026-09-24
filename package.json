@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "3D bicycle ride through a Japanese spring valley (three.js)",
   "scripts": {
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "netlify": "node scripts/build.mjs && node scripts/package-netlify.mjs --zip"
   },
   "repository": {
     "type": "git",

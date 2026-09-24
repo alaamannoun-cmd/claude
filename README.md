@@ -10,6 +10,11 @@ A 3D bicycle ride through a Japanese spring valley, built with three.js. Everyth
 
 يُفضَّل حاسوب ببطاقة رسوميات. اللعبة تختار الجودة تلقائياً، وتخفّضها بنفسها إذا انخفض معدّل الإطارات. يمكنك أيضاً تغييرها من شاشة البداية أو بمفتاح `Q`.
 
+## النشر على Netlify
+
+- **رفع يدوي:** شغّل `npm run netlify` (أو استخدم الملف الجاهز `sakura-michi-netlify.zip`)، ثم اسحب ملف الـ zip إلى [app.netlify.com/drop](https://app.netlify.com/drop). الملف يحتوي على `index.html` و`_headers` في جذره مباشرة.
+- **نشر تلقائي من GitHub:** اربط المستودع بـ Netlify. ملف `netlify.toml` يحدّد أمر البناء ومجلد النشر `dist/netlify`.
+
 ## التحكّم
 
 | المفتاح | الوظيفة |

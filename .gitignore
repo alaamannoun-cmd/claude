@@ -2,3 +2,5 @@ node_modules/
 shots/
 *.log
 dist/artifact.html
+dist/netlify/
+dist/*.zip
