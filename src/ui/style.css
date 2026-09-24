@@ -89,9 +89,13 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 24px; 
 /* touch controls */
 #touch { display: none; position: absolute; inset-inline: 0; bottom: 0; padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px)); justify-content: space-between; align-items: flex-end; pointer-events: none; }
 body.touch #touch { display: flex; }
-body.touch #chips { bottom: auto; top: calc(78px + env(safe-area-inset-top, 0px)); inset-inline-start: 16px; max-width: calc(100vw - 190px); }
-body.touch #speedo { bottom: auto; top: calc(180px + env(safe-area-inset-top, 0px)); inset-inline-end: 16px; transform: scale(0.8); transform-origin: top left; }
-body.touch #minimap-wrap { width: 118px; height: 118px; }
+/* phones: minimap and menu on the left, place name and speed on the right, controls at the bottom */
+body.touch #minimap-wrap { width: 112px; height: 112px; top: calc(14px + env(safe-area-inset-top, 0px)); inset-inline-end: 14px; }
+body.touch #chips { bottom: auto; top: calc(136px + env(safe-area-inset-top, 0px)); inset-inline-start: auto; inset-inline-end: 14px; flex-direction: column; align-items: flex-end; max-width: 150px; }
+body.touch #chips .chip:not([data-action="pause"]):not([data-action="camera"]) { display: none; }
+body.touch #speedo { bottom: auto; top: calc(150px + env(safe-area-inset-top, 0px)); inset-inline-end: auto; inset-inline-start: 14px; transform: scale(0.78); transform-origin: top right; }
+body.touch .place { top: calc(16px + env(safe-area-inset-top, 0px)); inset-inline-start: 14px; }
+body.touch #toast { top: 36%; white-space: normal; text-align: center; max-width: calc(100vw - 48px); }
 #steer-pad { pointer-events: auto; position: relative; width: 170px; height: 74px; border-radius: 40px; background: var(--glass); border: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; color: var(--mist); touch-action: none; order: 2; }
 #steer-knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: var(--paper); opacity: 0.9; transition: transform 0.08s linear; }
 .touch-right { display: flex; align-items: flex-end; gap: 10px; order: 1; pointer-events: none; }
@@ -112,7 +116,7 @@ body.touch #minimap-wrap { width: 118px; height: 118px; }
 
 @media (max-width: 720px) {
   .title-col { flex-direction: column; align-items: flex-start; padding-block: 18px; overflow-y: auto; max-height: 100%; }
-  .title-mark { flex-direction: row; font-size: 54px; }
+  .title-mark { flex-direction: row; direction: ltr; font-size: 54px; }
   .title-mark::after { display: none; }
   .legend { display: none; }
   .hint-mouse { display: none; }
