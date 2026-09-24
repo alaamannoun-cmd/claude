@@ -61,6 +61,7 @@ export async function render(root) {
             <button class="btn subtle" id="exportAll">${icon('download', 16)} تصدير كل البيانات (JSON)</button>
             <button class="btn ghost danger" id="resetAll">${icon('trash', 16)} مسح كل شي والبدء من جديد</button>
           </div>
+          ${c.protected ? `<button class="btn subtle" id="logoutBtn" style="margin-top:12px">${icon('lock', 16)} تسجيل الخروج</button>` : ''}
         </section>
       </div>
     </div>`;
@@ -98,6 +99,7 @@ export async function render(root) {
       const r = await api.post('/api/config', { clearKey: true });
       state.config = r.config; emit(); paint();
     }
+    if (e.target.closest('#logoutBtn')) { await api.post('/api/logout'); location.reload(); return; }
     if (e.target.closest('#exportAll')) download(`majlis-export-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(await api.get('/api/export'), null, 2), 'application/json');
     if (e.target.closest('#resetAll')) {
       if (!(await confirmBox('رح ينمسح كل شي: المدرّبين، الذاكرة، الأهداف، والمسارات. متأكد؟', { danger: true, okText: 'امسح كل شي' }))) return;

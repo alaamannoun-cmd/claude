@@ -62,8 +62,10 @@ async function pipe(s, gen) {
 }
 
 export async function handleApi(req, res, url) {
+  const override = req.method === 'POST' && req.headers['x-http-method-override'];
+  const method = override ? String(override).toUpperCase() : req.method;
   for (const r of routes) {
-    if (r.method !== req.method) continue;
+    if (r.method !== method) continue;
     const m = url.pathname.match(r.re);
     if (!m) continue;
     try {

@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "demo": "MOCK=1 node server.js"
+    "demo": "MOCK=1 node server.js",
+    "build:hostinger": "node tools/build-hostinger.mjs"
   },
   "engines": {
     "node": ">=18.17"

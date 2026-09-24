@@ -27,6 +27,8 @@ export async function publicConfig() {
     model: c.model,
     mock: c.forceMock || !c.apiKey,
     forceMock: c.forceMock,
+    protected: !!process.env.APP_PASSWORD,
+    backend: 'node',
   };
 }
 

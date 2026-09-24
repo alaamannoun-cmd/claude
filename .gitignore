@@ -7,3 +7,6 @@ data/
 tools/avatar-pipeline/node_modules/
 tools/avatar-pipeline/src/
 tools/avatar-pipeline/glb_raw/
+
+# حزمة الاستضافة المبنية (npm run build:hostinger)
+dist/

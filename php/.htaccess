@@ -1,0 +1,32 @@
+# مجلس — Majlis (Hostinger / Apache / LiteSpeed)
+Options -Indexes
+DirectoryIndex index.html
+AddDefaultCharset utf-8
+AddType model/gltf-binary .glb
+AddType image/webp .webp
+AddType text/javascript .js
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # private folders/files
+  RewriteRule ^data(/|$) - [F,L]
+  RewriteRule ^api/(lib/|shared\.json$|config\.php$) - [F,L]
+  # every /api/* request goes to the PHP backend
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^api/ api/index.php [QSA,L]
+</IfModule>
+
+# live streaming (chat, council) must not be compressed or buffered
+<IfModule mod_setenvif.c>
+  SetEnvIf Request_URI "^/api/" no-gzip=1 dont-vary=1
+</IfModule>
+<IfModule LiteSpeed>
+  RewriteRule ^api/ - [E=noabort:1,E=noconntimeout:1]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  <FilesMatch "\.(glb|webp)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+</IfModule>

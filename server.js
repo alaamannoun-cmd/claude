@@ -48,26 +48,38 @@ async function serveStatic(req, res, pathname) {
   }
 }
 
-// Optional password gate for public hosting (set APP_PASSWORD in .env). Any username works.
+// Optional password gate for public hosting (set APP_PASSWORD in .env): cookie session via /api/login.
 const PASSWORD = process.env.APP_PASSWORD || '';
-function authorized(req) {
-  if (!PASSWORD) return true;
-  const [type, b64] = (req.headers.authorization || '').split(' ');
-  if (type !== 'Basic' || !b64) return false;
-  const given = Buffer.from(Buffer.from(b64, 'base64').toString('utf8').replace(/^[^:]*:/, ''));
-  const want = Buffer.from(PASSWORD);
-  return given.length === want.length && crypto.timingSafeEqual(given, want);
+const TOKEN = PASSWORD ? crypto.createHmac('sha256', PASSWORD).update('majlis-session-v1').digest('hex') : '';
+const safeEqual = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
+const cookieOf = (req, name) => (req.headers.cookie || '').split(/;\s*/).map(c => c.split('=')).find(([k]) => k === name)?.[1] || '';
+const authed = req => !PASSWORD || safeEqual(cookieOf(req, 'majlis_auth'), TOKEN);
+function authCookie(req, value, maxAge) {
+  const secure = req.headers['x-forwarded-proto'] === 'https' || req.socket.encrypted ? '; Secure' : '';
+  return `majlis_auth=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`;
+}
+async function handleAuth(req, res, url) {
+  const send = (status, data, headers = {}) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', ...headers }); res.end(JSON.stringify(data)); };
+  if (url.pathname === '/api/logout') return send(200, { ok: true }, { 'Set-Cookie': authCookie(req, '', 0) }), true;
+  if (url.pathname === '/api/login' && req.method === 'POST') {
+    let raw = '';
+    for await (const c of req) { raw += c; if (raw.length > 10000) break; }
+    let password = '';
+    try { password = JSON.parse(raw || '{}').password || ''; } catch { /* ignore */ }
+    if (!PASSWORD || !safeEqual(password, PASSWORD)) {
+      await new Promise(r => setTimeout(r, 800));
+      return send(401, { error: 'كلمة المرور غير صحيحة', auth: true }), true;
+    }
+    return send(200, { ok: true }, { 'Set-Cookie': authCookie(req, TOKEN, 30 * 86400) }), true;
+  }
+  if (!authed(req)) return send(401, { error: 'تسجيل الدخول مطلوب', auth: true }), true;
+  return false;
 }
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
-  if (!authorized(req)) {
-    res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Majlis", charset="UTF-8"', 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('كلمة المرور مطلوبة');
-    return;
-  }
   try {
-    if (url.pathname.startsWith('/api/')) await handleApi(req, res, url);
+    if (url.pathname.startsWith('/api/')) { if (!(await handleAuth(req, res, url))) await handleApi(req, res, url); }
     else await serveStatic(req, res, url.pathname);
   } catch (e) {
     console.error(e);

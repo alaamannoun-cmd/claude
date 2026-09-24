@@ -1,11 +1,14 @@
+// PUT/PATCH/DELETE travel as POST + X-HTTP-Method-Override (some shared hosts block those verbs).
 async function req(method, url, body) {
+  const headers = body ? { 'Content-Type': 'application/json' } : {};
+  if (!['GET', 'POST'].includes(method)) headers['X-HTTP-Method-Override'] = method;
   const res = await fetch(url, {
-    method,
-    headers: body ? { 'Content-Type': 'application/json' } : {},
+    method: method === 'GET' ? 'GET' : 'POST',
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  if (!res.ok) throw Object.assign(new Error(data.error || `HTTP ${res.status}`), { status: res.status, auth: !!data.auth });
   return data;
 }
 
@@ -30,7 +33,7 @@ export async function stream(url, body, handlers, signal) {
   });
   if (!res.ok) {
     const d = await res.json().catch(() => ({}));
-    throw new Error(d.error || `HTTP ${res.status}`);
+    throw Object.assign(new Error(d.error || `HTTP ${res.status}`), { status: res.status, auth: !!d.auth });
   }
   const reader = res.body.getReader();
   const decoder = new TextDecoder();

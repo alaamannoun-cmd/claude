@@ -1,4 +1,5 @@
 import { state, load, subscribe, team, director, reminders } from './store.js';
+import { api } from './api.js';
 import { $, esc, icon, pref, setPref, toast } from './ui.js';
 import { levelInfo } from './catalog.js';
 import { av } from './components.js';
@@ -148,12 +149,39 @@ function setupChrome() {
   });
 }
 
+function showLogin() {
+  $('#onboarding').innerHTML = `
+    <div class="onb"><div class="onb-card login-card">
+      <img src="/favicon.svg" alt="" width="64" height="64">
+      <h2>مجلس</h2>
+      <p class="muted">هذه المساحة محمية بكلمة مرور.</p>
+      <form id="loginForm" class="onb-form col">
+        <div class="input-icon">${icon('lock', 18)}<input class="input lg" type="password" name="pw" placeholder="كلمة المرور" autocomplete="current-password" required autofocus></div>
+        <button class="btn primary lg">${icon('key', 18)} دخول</button>
+      </form>
+    </div></div>`;
+  $('#loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const b = e.target.querySelector('button');
+    b.disabled = true;
+    try {
+      await api.post('/api/login', { password: e.target.pw.value });
+      location.reload();
+    } catch (err) {
+      toast(esc(err.message), { type: 'error' });
+      b.disabled = false;
+      e.target.pw.select();
+    }
+  });
+}
+
 async function boot() {
   setupChrome();
   try {
     await load();
   } catch (e) {
-    $('#splash').innerHTML = `<div class="empty">${icon('x', 34)}<h3>تعذّر الاتصال بالخادم</h3><p>${esc(e.message)} — تأكد أن <code>node server.js</code> شغّال.</p></div>`;
+    if (e.auth) { $('#splash').remove(); return showLogin(); }
+    $('#splash').innerHTML = `<div class="empty">${icon('x', 34)}<h3>تعذّر الاتصال بالخادم</h3><p>${esc(e.message)} — تأكد أن الخادم يعمل ثم أعد تحميل الصفحة.</p></div>`;
     return;
   }
   $('#splash').classList.add('hide');
